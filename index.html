@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Toronto BikeShare Station Network</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>Toronto BikeShare Station Network</h1>
+  </header>
+
+  <section id="controls">
+    <div class="control-row">
+      <label class="checkbox">
+        <input type="checkbox" id="byMonth" />
+        <span>By Month</span>
+      </label>
+      <div class="month-slider-group">
+        <input type="range" id="monthSlider" min="1" max="12" step="1" value="1" disabled />
+        <span id="monthLabel">All months</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-title">Membership:</span>
+      <label class="radio"><input type="radio" name="memberType" value="All" checked /> All</label>
+      <label class="radio"><input type="radio" name="memberType" value="Annual" /> Annual Member</label>
+      <label class="radio"><input type="radio" name="memberType" value="Casual" /> Casual Member</label>
+    </div>
+  </section>
+
+  <main id="main">
+
+    <div id="map-container">
+      <svg id="map" role="img" aria-label="Toronto BikeShare station network"></svg>
+      <div id="tooltip" class="tooltip" style="display:none;"></div>
+      <div id="routeInfo" class="route-info" style="display:none;"></div>
+      <button id="backButton" class="back-button" style="display:none;" title="Back to network">Back</button>
+      <div class="zoom-buttons">
+        <button id="zoomIn" title="Zoom in">+</button>
+        <button id="zoomOut" title="Zoom out">−</button>
+      </div>
+    </div>
+
+    <!-- Top starting stations table -->
+    <section id="data-table" aria-labelledby="data-table-title">
+      <h2 id="data-table-title" class="section-title">Top 25 Starting Stations</h2>
+      <div id="tableContainer" class="table-container">
+        <table id="topStartTable" class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Station</th>
+              <th scope="col">Trips Started</th>
+              <th scope="col">Trips Ended</th>
+              <th scope="col">Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Data Load Debug section (moved to bottom) -->
+    <section id="debug" aria-labelledby="debug-title">
+      <h2 id="debug-title" class="section-title">Data Load Debug (Sample Dataset)</h2>
+      <div class="table-container">
+        <table id="debugTable" class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">File</th>
+              <th scope="col">Month</th>
+              <th scope="col">Raw rows</th>
+              <th scope="col">Cleaned rows</th>
+              <th scope="col">Expected cols present</th>
+              <th scope="col">Columns</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    This visualization requires JavaScript to run.
+  </noscript>
+
+  <script src="script.js"></script>
+</body>
+</html>

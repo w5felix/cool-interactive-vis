@@ -1,0 +1,159 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #6b7280;
+  --panel: #f5f5f7;
+  --border: #d1d5db;
+  --accent: #b91c1c; /* red */
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.app-header { padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.app-header h1 { margin: 0; font-size: 1.4rem; }
+
+#controls { padding: 10px 16px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border); }
+.control-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.control-title { color: var(--muted); font-weight: 600; }
+.checkbox, .radio { display: inline-flex; align-items: center; gap: 6px; }
+.month-slider-group { display: inline-flex; align-items: center; gap: 10px; }
+#monthSlider { width: 260px; }
+#monthLabel { color: var(--muted); }
+
+#main { padding: 0; }
+#map-container {
+  position: relative;
+  width: 100%;
+  height: min(80vh, 760px);
+  border-top: 1px solid var(--border);
+}
+#map { width: 100%; height: 100%; display: block; background: #f9fafb; }
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(255,255,255,0.95);
+  color: #111;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  max-width: 280px;
+}
+.tooltip .title { font-weight: 700; margin-bottom: 4px; }
+.tooltip .muted { color: #555; }
+
+.zoom-buttons {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.zoom-buttons button {
+  width: 38px; height: 38px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  font-size: 20px;
+  cursor: pointer;
+}
+.zoom-buttons button:hover { background: #f3f4f6; }
+
+.back-button {
+  position: absolute;
+  top: 12px; left: 12px;
+  padding: 6px 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.back-button:hover { background: #f3f4f6; }
+
+.route-info {
+  position: absolute;
+  top: 12px; right: 12px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.station { stroke: #7f1d1d; stroke-width: 0.5px; fill-opacity: 0.85; }
+.station.dimmed { opacity: 0.18; }
+.station.highlight { stroke: #111827; stroke-width: 1.5px; }
+
+.route-line { fill: none; stroke: #ef4444; stroke-opacity: 0.75; }
+.route-line.dimmed { opacity: 0.18; }
+.route-end { stroke: #7f1d1d; stroke-width: 0.5px; fill: #ef4444; fill-opacity: 0.95; }
+
+/* Data table styles */
+.section-title { margin: 16px; font-size: 1.1rem; }
+#data-table { padding-bottom: 20px; }
+.table-container { padding: 0 16px 16px 16px; overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table thead th { position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--border); text-align: left; padding: 8px; }
+.data-table tbody td { border-bottom: 1px solid var(--border); padding: 8px; }
+.data-table tbody tr:hover { background: #f9fafb; }
+.data-table .num { text-align: right; white-space: nowrap; }
+.data-table .rank { width: 48px; text-align: right; color: var(--muted); }
+.data-table .station-link { color: #1f2937; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+
+/* Debug table status coloring */
+.status-ok { color: #065f46; font-weight: 600; }
+.status-bad { color: #b91c1c; font-weight: 600; }
+
+
+/* Interactive network enhancements */
+.station {
+  transition: r 220ms ease, fill 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+.route-line {
+  transition: stroke 220ms ease, stroke-width 220ms ease, opacity 220ms ease;
+}
+.station.hovered {
+  stroke-width: 2px;
+}
+.station.endpoint-highlight {
+  fill: #6366f1 !important; /* indigo */
+  stroke: #3730a3;
+}
+.route-line.endpoint-highlight {
+  stroke: #6366f1;
+  stroke-opacity: 0.95;
+}
+
+/* Labels for popular nodes */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #111827;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.label.fade-in { opacity: 0; animation: labelFade 300ms ease forwards; }
+@keyframes labelFade { to { opacity: 1; } }
+
+/* Fun hover pulse */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.station.hovered { animation: pulse 800ms ease-in-out infinite; }
