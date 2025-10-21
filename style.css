@@ -131,6 +131,11 @@ body {
   fill: #6366f1 !important; /* indigo */
   stroke: #3730a3;
 }
+/* Connected stations in selected mode */
+.station.connected {
+  fill: #0ea5e9 !important; /* sky blue */
+  stroke: #0369a1;
+}
 .route-line.endpoint-highlight {
   stroke: #6366f1;
   stroke-opacity: 0.95;

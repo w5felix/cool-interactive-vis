@@ -598,10 +598,25 @@
       exit => exit.remove()
     );
 
-    // Labels for popular nodes (top fraction up to 20)
-    const nLabel = Math.min(20, Math.max(8, Math.round(nodes.length * 0.2)));
-    const labelCutoff = nodes[nLabel - 1] ? nodes[nLabel - 1].total : Infinity;
-    const labelNodes = nodes.filter(n => n.total >= labelCutoff);
+    // Labels
+    let labelNodes;
+    if (state.isDetail && state.selectedStation) {
+      // Show only the selected station and its top 5 connected stations
+      const memberKeyL = state.selectedMember || 'All';
+      const monthKeyL = state.selectedMonthKey || 'All';
+      const routeMapL = (state.endRoutes?.[memberKeyL]?.[monthKeyL] || {})[state.selectedStation];
+      let topSetL = new Set([state.selectedStation]);
+      if (routeMapL) {
+        const topArrL = Array.from(routeMapL.entries()).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        topArrL.forEach(x => topSetL.add(x[0]));
+      }
+      labelNodes = nodes.filter(n => topSetL.has(n.name));
+    } else {
+      // Popular nodes (top fraction up to 20)
+      const nLabel = Math.min(20, Math.max(8, Math.round(nodes.length * 0.2)));
+      const labelCutoff = nodes[nLabel - 1] ? nodes[nLabel - 1].total : Infinity;
+      labelNodes = nodes.filter(n => n.total >= labelCutoff);
+    }
 
     const labelSel = gLabels.selectAll('text.label')
       .data(labelNodes, d => d.name);
@@ -617,9 +632,13 @@
     // Initialize or update simulation
     if (!state.simulation) {
       state.simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.name || d.id).distance(d => 120 - Math.min(80, Math.log1p(d.value)*20)).strength(0.6))
-        .force('charge', d3.forceManyBody().strength(-60))
-        .force('collide', d3.forceCollide().radius(d => Math.max(3, radiusScale(d.total)) + 2))
+        .force('link', d3.forceLink(links)
+          .id(d => d.name || d.id)
+          .distance(d => 200 - Math.min(140, Math.log1p(d.value) * 30))
+          .strength(0.5)
+        )
+        .force('charge', d3.forceManyBody().strength(-120))
+        .force('collide', d3.forceCollide().radius(d => Math.max(3, radiusScale(d.total)) + 4))
         .force('center', d3.forceCenter(state.width/2, state.height/2));
     } else {
       state.simulation.nodes(nodes);
@@ -652,7 +671,10 @@
 
       gStations.selectAll('circle.station')
         .classed('dimmed', d => !keepNodes.has(d.name))
-        .classed('highlight', d => d.name === selected);
+        .classed('highlight', d => d.name === selected)
+        .classed('connected', d => endNames.has(d.name))
+        .attr('filter', d => d.name === selected ? 'url(#glow)' : null)
+        .attr('r', d => keepNodes.has(d.name) ? Math.max(3, radiusScale(d.total) * 2) : 2);
 
       gRoutes.selectAll('line.route-line')
         .classed('dimmed', d => {
@@ -665,7 +687,12 @@
       routeInfoEl.style.display = 'block';
       backButtonEl.style.display = 'block';
     } else {
-      gStations.selectAll('circle.station').classed('dimmed', false).classed('highlight', false);
+      gStations.selectAll('circle.station')
+        .classed('dimmed', false)
+        .classed('highlight', false)
+        .classed('connected', false)
+        .attr('filter', null)
+        .attr('r', d => Math.max(3, radiusScale(d.total)));
       gRoutes.selectAll('line.route-line').classed('dimmed', false);
       routeInfoEl.style.display = 'none';
       backButtonEl.style.display = 'none';
