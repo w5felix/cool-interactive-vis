@@ -1,0 +1,47 @@
+Designing a Free‑Flowing, Explainable Network for Bike Share Toronto
+
+We set out to build an explorable picture of rider flows that explains itself as you use it. The network already suggests a living system—hubs pulsing at rush hour, weekend‑bright peripheries, and corridors that carry most of the traffic—so our job was to choose visual encodings and interactions that make those structures obvious without narration, while keeping a separate written rationale here for completeness.
+
+Rationale: Encodings, Interaction, and Motion
+We chose a force‑directed network over a geographic map because geography dominated the message in early prototypes. In map mode the shoreline and arterials pulled attention away from station‑to‑station relationships. The force layout (d3‑force) lets links and totals tell the story: stations that share heavy traffic settle near one another, and major corridors thicken between them.
+
+Encodings
+• Node size encodes total trips at a station (starts + ends). We use a square‑root scale so area increases perceptually evenly with count: r = k·sqrt(trips). Alternatives we tried: degree (unique partners) and log‑scaled starts only. Total trips proved the most interpretable in user tests.
+• Node color encodes popularity on a continuous gradient anchored to the current filtered distribution; the legend updates in sync. We default to a warm sequential ramp and offer a color‑blind‑friendly alternative (Viridis). We deliberately avoided categorical palettes (e.g., clusters or membership share) because they compete with size and complicate the legend.
+• Link width encodes route trip count with a linear or sqrt mapping depending on range: w = a + b·sqrt(trips). We rejected opacity for the primary encoding because thin bright lines read better than thick faint ones on both light and dark backgrounds.
+
+Interaction and motion
+• Load animation comes for free from d3‑force’s relaxation; we simply let the simulation run at a modest alpha so the layout “breathes” into place. We removed any hover wiggle that created flicker.
+• Dragging is persistent: releasing a node fixes it (node.fx, node.fy). Double‑clicking clears fx/fy so the node reenters the simulation. This respects user intent and prevents the “snap back” many found frustrating.
+• 3D mode is a thin layer over the 2D simulation. We keep the 2D force layout but project the node positions into 3D for rendering. Dragging the background rotates the camera (yaw/pitch); dragging a node in 3D unprojects the cursor to a point at the node’s depth so movement feels natural in the chosen view.
+• Filtering is percentile‑based to match how people think about “top routes.” A compact histogram shows the distribution and a slider controls a percentile P; we compute the corresponding trip threshold T = Q(P) and hide routes with trips < T in overview. In detail view (after selecting a station) we bypass the filter around that node so context isn’t lost.
+
+Technical specifics and math
+Force layout. We use d3.forceSimulation with
+• d3.forceLink (id by station id) with strength scaled by normalized route volume so busy pairs tug a bit more,
+• d3.forceManyBody with a modest negative charge to prevent overlap,
+• d3.forceCenter to keep the centroid in view,
+• an optional d3.forceCollide tuned to minimum node radius to avoid heavy overlaps at small zoom.
+
+3D projection. We treat each node’s 2D force position (x, y) as a world‑space point with an assigned depth z0 derived deterministically from its id to give slight parallax. Interaction sets yaw θ and pitch φ. We rotate the point by R = R_x(φ)·R_y(θ):
+
+We present kilometers and miles (d·0.621371) for familiarity.
+Histogram percentile slider. From per‑link counts, we build 24–40 bins with d3.bin for the backdrop. For filtering, we sort counts and compute quantiles with d3.quantileSorted; the UI shows both the chosen percentile and the mapped threshold to avoid ambiguity.
+Rendering and shading. To avoid heavy WebGL dependencies, we simulate spherical nodes in SVG using radial gradients (lighter center, darker edge) that track the node’s base color. In 3D mode we modulate gradient intensity by s to hint at shading. Links are drawn first; nodes are painter‑sorted by z′; labels are last with depth‑aware opacity.
+
+Alternatives considered
+We dropped the geographic map mode after repeated attempts to systematically obtain geo-coordinate data of the stations produced erroneous results. We considered edge bundling to reduce clutter but declined because it can mislead about path counts. WebGL (three.js/regl) was evaluated; for this data scale SVG with D3 data joins stayed fast enough and far simpler to maintain.
+Development process
+We divided work into three streams: (1) Data prep: cleaning sample CSVs, joining station metadata, and computing station/route aggregates. (2) Visualization engineering: force layout, 3D projection, zoom/drag behaviors, and performance tweaks (collide thresholds, requestAnimationFrame throttling). (3) Design/UX: legend, color‑blind toggle, histogram slider, dark 3D aesthetic, table alignment.
+Time budget (people‑hours, approximate)
+• Data prep and validation: ~4h
+• Core network + filters: ~20h
+• 3D mode + intuitive dragging/unprojection: ~14h
+• Histogram percentile + legend/accessibility: ~1h
+• Design polish and tables: ~6h
+• QA, bug fixes, write‑up: ~3h
+The hardest pieces were the unprojection math for natural 3D dragging and tuning percentile thresholds to behave well across months and membership filters.
+
+Acknowledgments
+Data: Bike Share Toronto open data (sample subset for this demo). Library: D3.js by Mike Bostock and contributors. Color: ColorBrewer (Cynthia Brewer) and the Viridis family (Smith & van der Walt et al.). Math references: Haversine formula (Wikipedia) and standard rotation/perspective matrices from computer graphics texts. We also drew inspiration from classic force‑directed network examples by the D3 community.
+

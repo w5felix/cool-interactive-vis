@@ -1,0 +1,160 @@
+<h2>Analytical Story and Technical Write‑up</h2>
+
+<h3>How we applied stakeholder feedback</h3>
+
+<h4>Visual encodings</h4>
+<ul>
+  <li><strong>Legend for color, size, and link width</strong> (Bethany, Olivia, Maria)
+    <ul>
+      <li>We added a persistent legend explaining that node <em>color</em> encodes station popularity (total trips), node <em>size</em> scales with total trips, and link <em>width</em> encodes route volume.</li>
+      <li>The color legend renders a live gradient and low/median/high anchors that update with the current filtered dataset.</li>
+    </ul>
+  </li>
+  <li><strong>Color‑blind‑friendly palette</strong> (Olivia, Maria)
+    <ul>
+      <li>We introduced a toggle to switch to a perceptually uniform, color‑blind‑friendly palette (Viridis family). The legend immediately reflects the palette change.</li>
+      <li>Rationale: improves accessibility while preserving monotonic mapping of popularity.</li>
+    </ul>
+  </li>
+  <li><strong>Brand affinity</strong> (Maria)
+    <ul>
+      <li>While we keep a warm default palette for contrast, the accessible palette better aligns with Bixi/Bike Share greens without over‑committing to brand colors that might reduce data legibility.</li>
+    </ul>
+  </li>
+  <li><strong>Edge clarity</strong> (Maria)
+    <ul>
+      <li>Routes (edges) now have their own tooltips showing From → To, trip count, and great‑circle distance in km and miles.</li>
+    </ul>
+  </li>
+</ul>
+
+<h4>Interaction and animation</h4>
+<ul>
+  <li><strong>Natural layout on load</strong> (Bethany)
+    <ul>
+      <li>We retained the force‑directed relaxation on load that gives a natural settling animation.</li>
+    </ul>
+  </li>
+  <li><strong>Dragging bugs and persistence</strong> (Bethany, Maria)
+    <ul>
+      <li>Node dragging is now <em>persistent</em>: when you release a node, it stays where you leave it (fixed position). Double‑click to unfix and let it reintegrate into the simulation.</li>
+      <li>We removed a hover “shake” animation that was causing flicker/glitches in tooltips and adjacent edges.</li>
+    </ul>
+  </li>
+  <li><strong>3D interaction polish</strong>
+    <ul>
+      <li>3D mode supports drag‑to‑rotate (yaw/pitch) with correct directionality and intuitive node dragging by unprojecting the pointer into world coordinates at the node’s depth.</li>
+      <li>We removed grid lines for a cleaner 3D aesthetic while retaining spherical shading cues.</li>
+    </ul>
+  </li>
+  <li><strong>Temporal smoothness</strong> (Olivia)
+    <ul>
+      <li>We considered tweened transitions between months; we opted to keep instantaneous switching for performance and stability on large graphs. The design leaves room for staged alpha/interpolation if performance budgets permit.</li>
+    </ul>
+  </li>
+  <li><strong>Zooming</strong>
+    <ul>
+      <li>We widened the zoom extent (down to 5%) to let users see the whole network at once.</li>
+    </ul>
+  </li>
+</ul>
+
+<h4>Design quality and guidance</h4>
+<ul>
+  <li><strong>Tables and alignment</strong> (Bethany, Olivia, Maria)
+    <ul>
+      <li>We aligned numeric headers and cells in the Top 25 table and polished the panel styling to match the minimalist UI.</li>
+    </ul>
+  </li>
+  <li><strong>Narrative and context</strong> (Olivia, Maria)
+    <ul>
+      <li>This write‑up is integrated into the page to give users immediate context: what the encodings mean, how to read flows, and why interactions work the way they do.</li>
+    </ul>
+  </li>
+  <li><strong>Decluttering for non‑technical users</strong> (Olivia)
+    <ul>
+      <li>We collapsed the debug/data‑load panel by default and elevated the legend and filters that matter to exploration.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Design decisions and rationale</h3>
+<ul>
+  <li><strong>Why a force‑directed network?</strong>
+    <ul>
+      <li>We originally experimented with a geographic (map) layout, but it over‑emphasized spatial distances at the expense of relational connectivity. The network foregrounds flows between stations regardless of exact geography.</li>
+    </ul>
+  </li>
+  <li><strong>Encodings</strong>
+    <ul>
+      <li><em>Node size</em> → total station activity. Alternatives considered: degree (unique partners) or log‑scaled starts. We chose total trips for direct interpretability.</li>
+      <li><em>Node color</em> → popularity gradient. Alternatives: categorical clusters, membership share. We kept a single quantitative color to avoid confounds with size.</li>
+      <li><em>Link width</em> → route trip counts. Alternatives: opacity, curvature. Width provides preattentive difference and maintains legibility in dark/light themes.</li>
+    </ul>
+  </li>
+  <li><strong>3D presentation</strong>
+    <ul>
+      <li>We added subtle 3D with perspective and interactive rotation for depth segregation and engagement. Alternatives: full WebGL or true 3D force layout; we chose 2D simulation with 3D projection for simplicity and performance.</li>
+    </ul>
+  </li>
+  <li><strong>Filtering and story focus</strong>
+    <ul>
+      <li>The histogram‑backed percentile slider filters low‑volume routes in default view to reduce clutter while allowing full visibility in detail view once a node is selected.</li>
+      <li>Optional hiding of low‑activity nodes helps reveal major corridors; nodes reappear in context during detail inspection.</li>
+    </ul>
+  </li>
+  <li><strong>Accessibility</strong>
+    <ul>
+      <li>Color‑blind‑friendly palette, better contrast in 3D dark mode, and descriptive tooltips on both nodes and links.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Alternatives considered</h3>
+<ul>
+  <li><strong>Geographic map vs. network</strong>: We removed the earlier map mode to reduce mode complexity and because map projection added little to understanding of aggregate flows.</li>
+  <li><strong>Edge bundling</strong>: Considered hierarchical or force‑directed edge bundling to reduce clutter. Deferred to keep interactions responsive and the implementation lightweight.</li>
+  <li><strong>Animated month transitions</strong>: Considered interpolation of node/link attributes across months; deferred due to potential instability of force positions and performance overhead.</li>
+  <li><strong>WebGL rendering</strong>: Considered regl/three.js for performance with tens of thousands of edges. Deferred given dataset scale and to minimize complexity while retaining D3’s expressive data joins.</li>
+</ul>
+
+<h3>Development process</h3>
+<ul>
+  <li><strong>Team roles</strong>
+    <ul>
+      <li>Data and pipeline: cleaning sample CSVs, geocoding stations, and generating station/route aggregates.</li>
+      <li>Visualization engineering: force layout, 3D projection, interaction (zoom, drag, rotate), filtering, and performance tuning.</li>
+      <li>Design and UX: visual system, legend, slider histogram, tables, and site polish.</li>
+      <li>QA and accessibility: cross‑mode verification, tooltip correctness (including units), and color‑blind review.</li>
+    </ul>
+  </li>
+  <li><strong>Time budget (people‑hours)</strong>
+    <ul>
+      <li>Data prep and validation: ~12h</li>
+      <li>Core network + filters: ~18h</li>
+      <li>3D mode and interaction polish: ~14h</li>
+      <li>Histogram slider + legend/accessibility: ~10h</li>
+      <li>Design polish and tables: ~6h</li>
+      <li>QA, bug fixes, and docs (this write‑up): ~8h</li>
+      <li><em>Total</em>: ~68 people‑hours</li>
+    </ul>
+  </li>
+  <li><strong>What took the most time?</strong>
+    <ul>
+      <li>Interactive 3D rotation combined with intuitive node dragging (unprojection math and edge‑case handling) and the histogram percentile mapping for route thresholds.</li>
+    </ul>
+  </li>
+  <li><strong>Process commentary</strong>
+    <ul>
+      <li>We iterated in small, testable increments to keep the app stable: first fixing jitter, then adding persistent drag, then accessibility and legend updates, and finally documentation.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>How to read the visualization (quick guide)</h3>
+<ol>
+  <li>Start with the legend: color and size both refer to station activity; thicker links indicate busier routes.</li>
+  <li>Use the percentile slider to focus on prominent flows; optionally hide low‑activity stations.</li>
+  <li>Toggle 3D and rotate gently to separate overlapping structures; scroll to zoom.</li>
+  <li>Hover links for route details and distances; click a station to enter detail view and examine its top routes.</li>
+</ol>

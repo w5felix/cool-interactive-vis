@@ -9,80 +9,176 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>Toronto BikeShare Station Network</h1>
+    <div class="container">
+      <h1>Toronto BikeShare Station Network</h1>
+      <p class="subtitle">Explore how riders move across the city’s stations by month, membership, and route popularity.</p>
+    </div>
   </header>
 
-  <section id="controls">
-    <div class="control-row">
-      <label class="checkbox">
-        <input type="checkbox" id="byMonth" />
-        <span>By Month</span>
-      </label>
-      <div class="month-slider-group">
-        <input type="range" id="monthSlider" min="1" max="12" step="1" value="1" disabled />
-        <span id="monthLabel">All months</span>
+  <div class="container">
+    <section id="controls" aria-label="Visualization controls">
+      <div class="control-row">
+        <label class="checkbox">
+          <input type="checkbox" id="byMonth" />
+          <span>By Month</span>
+        </label>
+        <div class="month-slider-group">
+          <input type="range" id="monthSlider" min="1" max="12" step="1" value="1" disabled />
+          <span id="monthLabel">All months</span>
+        </div>
       </div>
-    </div>
-    <div class="control-row">
-      <span class="control-title">Membership:</span>
-      <label class="radio"><input type="radio" name="memberType" value="All" checked /> All</label>
-      <label class="radio"><input type="radio" name="memberType" value="Annual" /> Annual Member</label>
-      <label class="radio"><input type="radio" name="memberType" value="Casual" /> Casual Member</label>
-    </div>
-  </section>
-
-  <main id="main">
-
-    <div id="map-container">
-      <svg id="map" role="img" aria-label="Toronto BikeShare station network"></svg>
-      <div id="tooltip" class="tooltip" style="display:none;"></div>
-      <div id="routeInfo" class="route-info" style="display:none;"></div>
-      <button id="backButton" class="back-button" style="display:none;" title="Back to network">Back</button>
-      <div class="zoom-buttons">
-        <button id="zoomIn" title="Zoom in">+</button>
-        <button id="zoomOut" title="Zoom out">−</button>
+      <div class="control-row">
+        <span class="control-title">Membership:</span>
+        <label class="radio"><input type="radio" name="memberType" value="All" checked /> All</label>
+        <label class="radio"><input type="radio" name="memberType" value="Annual" /> Annual Member</label>
+        <label class="radio"><input type="radio" name="memberType" value="Casual" /> Casual Member</label>
       </div>
-    </div>
-
-    <!-- Top starting stations table -->
-    <section id="data-table" aria-labelledby="data-table-title">
-      <h2 id="data-table-title" class="section-title">Top 25 Starting Stations</h2>
-      <div id="tableContainer" class="table-container">
-        <table id="topStartTable" class="data-table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Station</th>
-              <th scope="col">Trips Started</th>
-              <th scope="col">Trips Ended</th>
-              <th scope="col">Total</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="control-row">
+        <label class="checkbox" title="Render the node network with a simple 3D perspective">
+          <input type="checkbox" id="mode3d" />
+          <span>3D mode</span>
+        </label>
+        <label class="checkbox" title="Use a color‑blind‑friendly palette for node colors">
+          <input type="checkbox" id="colorBlindPalette" />
+          <span>Color‑blind friendly colors</span>
+        </label>
       </div>
+      <div class="control-row route-filter-row">
+        <span class="control-title">Route visibility:</span>
+        <div class="route-filter">
+          <svg id="routeHist" width="360" height="40" aria-hidden="true"></svg>
+          <label for="minRouteSlider" class="sr-only">Hide routes with fewer than</label>
+          <input type="range" id="minRouteSlider" min="0" max="100" step="1" value="0" />
+        </div>
+        <span id="minRouteLabel">0 trips (P0)</span>
+        <label class="checkbox" title="Also hide stations that are not part of any route above the threshold in default view">
+          <input type="checkbox" id="hideLowNodes" />
+          <span>Hide low-activity stations</span>
+        </label>
+      </div>
+      <p class="callout" aria-live="polite">Use the percentile slider to surface the city’s main corridors. In default view, routes below your threshold fade away so the emerging structure is easier to read. Click any station to temporarily reveal its quieter links in context.</p>
+
+      <!-- Legend -->
+      <div id="legend" class="legend" aria-label="Legend explaining color, size, and link width encodings">
+        <div class="legend-row">
+          <div class="legend-title">Node color: Station popularity (total trips)</div>
+          <svg id="legendColor" width="220" height="20" aria-hidden="true">
+            <defs>
+              <linearGradient id="legendGradient" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" stop-color="#fde68a"></stop>
+                <stop offset="100%" stop-color="#b91c1c"></stop>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="2" width="220" height="12" rx="6" fill="url(#legendGradient)"></rect>
+            <g class="legend-axis" transform="translate(0, 18)">
+              <text class="tick" x="0">low</text>
+              <text class="tick" x="110" text-anchor="middle">median</text>
+              <text class="tick" x="220" text-anchor="end">high</text>
+            </g>
+          </svg>
+        </div>
+        <div class="legend-row">
+          <div class="legend-title">Node size: Total trips at station</div>
+          <svg id="legendSize" width="220" height="46" aria-hidden="true">
+            <g transform="translate(12,23)">
+              <circle id="sz1" r="4" cx="0" cy="0"></circle>
+              <text id="sz1l" x="16" y="4" class="legend-note">fewer</text>
+            </g>
+            <g transform="translate(110,23)">
+              <circle id="sz2" r="10" cx="0" cy="0"></circle>
+              <text id="sz2l" x="16" y="4" class="legend-note">median</text>
+            </g>
+            <g transform="translate(208,23)">
+              <circle id="sz3" r="16" cx="0" cy="0"></circle>
+              <text id="sz3l" x="16" y="4" class="legend-note" text-anchor="end">more</text>
+            </g>
+          </svg>
+        </div>
+        <div class="legend-row">
+          <div class="legend-title">Link width: Trips between stations</div>
+        </div>
+      </div>
+      <p class="callout">Color and size both reflect station activity: the palette tracks the current data range, and you can switch to a color‑blind‑friendly scheme at any time. Thicker links mark busier flows.</p>
     </section>
 
-    <!-- Data Load Debug section (moved to bottom) -->
-    <section id="debug" aria-labelledby="debug-title">
-      <h2 id="debug-title" class="section-title">Data Load Debug (Sample Dataset)</h2>
-      <div class="table-container">
-        <table id="debugTable" class="data-table">
-          <thead>
-            <tr>
-              <th scope="col">File</th>
-              <th scope="col">Month</th>
-              <th scope="col">Raw rows</th>
-              <th scope="col">Cleaned rows</th>
-              <th scope="col">Expected cols present</th>
-              <th scope="col">Columns</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+    <main id="main">
+      <div id="map-container">
+        <svg id="map" role="img" aria-label="Toronto BikeShare station network"></svg>
+        <div id="tooltip" class="tooltip" style="display:none;"></div>
+        <div id="routeInfo" class="route-info" style="display:none;"></div>
+        <button id="backButton" class="back-button" style="display:none;" title="Back to network">Back</button>
+        <div class="zoom-buttons">
+          <button id="zoomIn" title="Zoom in">+</button>
+          <button id="zoomOut" title="Zoom out">−</button>
+        </div>
       </div>
-    </section>
-  </main>
+      <p class="callout">Hover a link to see the route’s trip count and distance. Toggle 3D and drag the background to rotate—depth helps separate overlapping clusters without changing the underlying relationships.</p>
+
+      <!-- Top starting stations table -->
+      <section id="data-table" aria-labelledby="data-table-title">
+        <h2 id="data-table-title" class="section-title">Top 25 Starting Stations</h2>
+        <p class="callout">This list spotlights the busiest origins. Click a station name to center the network on it—quieter, below‑threshold routes around that station will reappear so you can see its full neighborhood in context.</p>
+        <div id="tableContainer" class="table-container">
+          <table id="topStartTable" class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Station</th>
+                <th scope="col" class="num">Trips Started</th>
+                <th scope="col" class="num">Trips Ended</th>
+                <th scope="col" class="num">Total</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Analytical story / technical write-up -->
+      <section id="story" aria-labelledby="story-title">
+        <h2 id="story-title" class="section-title">Analytical Story</h2>
+        <div id="storyContainer" class="table-container"></div>
+      </section>
+
+      <!-- Data Load Debug section (collapsible) -->
+      <section id="debug">
+        <details open>
+          <summary id="debug-title" class="section-title">Data Load Debug (Sample Dataset)</summary>
+          <div class="table-container">
+            <table id="debugTable" class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">File</th>
+                  <th scope="col">Month</th>
+                  <th scope="col">Raw rows</th>
+                  <th scope="col">Cleaned rows</th>
+                  <th scope="col">Expected cols present</th>
+                  <th scope="col">Columns</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <footer class="app-footer" role="contentinfo">
+      <p>
+        Built with <a href="https://d3js.org/" target="_blank" rel="noopener">D3.js</a>
+        <span class="sep">•</span>
+        Data: <a href="https://bikesharetoronto.com/open-data/" target="_blank" rel="noopener">Bike Share Toronto</a> (sample)
+        <span class="sep">•</span>
+        Colors inspired by <a href="https://colorbrewer2.org/" target="_blank" rel="noopener">ColorBrewer</a> and the <a href="https://bids.github.io/colormap/" target="_blank" rel="noopener">Viridis</a> family
+        <span class="sep">•</span>
+        Distance via <a href="https://en.wikipedia.org/wiki/Haversine_formula" target="_blank" rel="noopener">Haversine</a>
+        <span class="sep">•</span>
+        Layout inspired by classic <a href="https://observablehq.com/@d3/force-directed-graph" target="_blank" rel="noopener">D3 force‑directed</a> examples
+        <span class="sep">•</span>
+        Drag to rotate in 3D, scroll to zoom.
+      </p>
+    </footer>
+  </div>
 
   <noscript>
     This visualization requires JavaScript to run. Ok

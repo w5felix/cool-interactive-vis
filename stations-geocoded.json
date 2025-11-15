@@ -1,0 +1,10 @@
+[
+  { "name": "Union Station", "lat": 43.645233, "lng": -79.380109 },
+  { "name": "Harbourfront Centre", "lat": 43.63877, "lng": -79.38167 },
+  { "name": "Distillery District", "lat": 43.6503, "lng": -79.3596 },
+  { "name": "Kensington Market", "lat": 43.6548, "lng": -79.4020 },
+  { "name": "Chinatown", "lat": 43.6536, "lng": -79.3985 },
+  { "name": "City Hall", "lat": 43.6535, "lng": -79.3840 },
+  { "name": "St. Lawrence Market", "lat": 43.6486, "lng": -79.3715 },
+  { "name": "Yonge & Dundas", "lat": 43.6577, "lng": -79.3802 }
+]
